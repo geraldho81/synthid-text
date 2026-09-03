@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SynthID-Text: scalable watermarking for LLM outputs</title>
+  <meta name="description" content="An explainer for SynthID-Text, the production-ready text watermarking scheme published in Nature Vol 634, 24 October 2024.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,650;0,9..144,700;1,9..144,500&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="watermark" id="watermark" aria-hidden="true"></div>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="mast">
+    <p class="mast-title">Scalable watermarking for identifying large language model outputs</p>
+    <span class="reg" aria-hidden="true" title="Registration mark"></span>
+  </header>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <main id="main">
+    <section class="hero sheet" id="hero" aria-labelledby="hero-title">
+      <p class="kicker">Nature Vol 634, 24 October 2024</p>
+      <p class="plate">Plate 01 / Hero</p>
+      <h1 id="hero-title">A watermark you cannot see, at the scale of Gemini</h1>
+      <div class="hero-grid">
+        <div class="hero-lead">
+          <p>SynthID-Text is a production-ready text watermarking scheme that preserves text quality, enables high detection accuracy, and adds minimal latency.</p>
+          <p>It does not change LLM training. It only changes sampling. Detection does not need the underlying LLM.</p>
+        </div>
+        <aside class="hero-meta">
+          <p class="meta-label">Equal contribution</p>
+          <p>Sumanth Dathathri, Abigail See, Sumedh Ghaisas, Po-Sen Huang, Rob McAdam</p>
+          <p class="meta-label">With</p>
+          <p>Welbl, Bachani, Kaskasoli, Stanforth, Matejovicova, Hayes, Vyas, Al Merey, Brown-Cohen, Bunel, Balle, Cemgil, Ahmed, Stacpoole, Shumailov, Baetu, Gowal, Hassabis, Kohli</p>
+          <p class="meta-label">Affiliation</p>
+          <p>Google DeepMind / Google</p>
+          <p class="meta-label">DOI</p>
+          <p><a href="https://doi.org/10.1038/s41586-024-08025-4">10.1038/s41586-024-08025-4</a></p>
+        </aside>
+      </div>
+    </section>
+
+    <figure class="bleed">
+      <img src="hero.jpg" width="1600" height="1000" alt="Letterpress paragraph on warm newsprint with a faint cyan security lattice and a red registration mark.">
+      <figcaption class="sheet cap">Fig. 1. Letterpress text with a cyan security lattice.</figcaption>
+    </figure>
+
+    <section class="sheet block" id="why" aria-labelledby="why-title">
+      <p class="plate">Plate 02 / Why it matters</p>
+      <h2 id="why-title">Why it matters</h2>
+      <div class="trio">
+        <article>
+          <p class="num">01</p>
+          <p>LLMs now write text that is hard to tell from human writing.</p>
+        </article>
+        <article>
+          <p class="num">02</p>
+          <p>Education, software, and the web need attribution.</p>
+        </article>
+        <article>
+          <p class="num">03</p>
+          <p>Watermarking can mark synthetic text so it can be identified later.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="sheet block" id="other" aria-labelledby="other-title">
+      <p class="plate">Plate 03 / Prior ideas</p>
+      <h2 id="other-title">Three other ideas, and why they struggle</h2>
+      <ol class="ideas">
+        <li>
+          <h3>Keep a growing record</h3>
+          <p>Store every generated text and search it later. Privacy, scale, and coordination get in the way.</p>
+        </li>
+        <li>
+          <h3>Train a classifier after the fact</h3>
+          <p>Expensive. Inconsistent. Biased against some groups such as non-native speakers. It decays as models improve.</p>
+        </li>
+        <li>
+          <h3>Edit-based or data-driven marks</h3>
+          <p>Synonym swaps, Unicode tricks, trigger phrases. They can leave artefacts.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="sheet block" id="how" aria-labelledby="how-title">
+      <p class="plate">Plate 04 / Method</p>
+      <h2 id="how-title">How SynthID-Text works</h2>
+      <p class="lede">Autoregressive LLMs pick the next token from a probability distribution. SynthID-Text biases that sampling with a secret key.</p>
+      <p class="breath">Tournament sampling, in one breath: sample several candidate tokens, play knockout matches using pseudorandom g-values, and the winner is the next token.</p>
+    </section>
+
+    <figure class="bleed">
+      <img src="tournament.jpg" width="1600" height="1000" alt="Knockout tournament of cubes on newsprint. Graphite cubes enter at the base. Cyan winners climb until one token remains at the top.">
+      <figcaption class="sheet cap">Fig. 2. Tournament sampling. Candidates enter at the base. Each match is scored with a secret g-value. One winner becomes the next token.</figcaption>
+    </figure>
+
+    <section class="sheet block steps-wrap" aria-labelledby="steps-title">
+      <h3 id="steps-title" class="subhead">Hold this in one breath</h3>
+      <ol class="steps">
+        <li>Sample several candidate tokens from the next-token distribution.</li>
+        <li>Pair them. Knockout matches use pseudorandom g-values from the key.</li>
+        <li>Winners play the next layer. Experiments generally use m = 30 layers, stacking more watermark evidence per token.</li>
+        <li>The last winner is the token the model writes.</li>
+        <li>Detection scores the finished text against the same key. Longer text and higher entropy make detection easier.</li>
+      </ol>
+    </section>
+
+    <section class="sheet block" id="quality" aria-labelledby="quality-title">
+      <p class="plate">Plate 05 / Quality</p>
+      <h2 id="quality-title">Quality, at the scale of Gemini</h2>
+      <p class="lede">Live Gemini experiment: about 20 million watermarked and unwatermarked responses.</p>
+    </section>
+
+    <figure class="bleed">
+      <img src="scale.jpg" width="1600" height="1000" alt="A long archive wall of small cards. Most are newsprint white. A sparse cyan lattice marks a few cards in the grid.">
+      <figcaption class="sheet cap">Fig. 3. Scale. About 20 million live Gemini responses, watermarked and not, judged by the people who used them.</figcaption>
+    </figure>
+
+    <section class="sheet block">
+      <div class="stats">
+        <article>
+          <p class="stat">0.01%</p>
+          <p>Thumbs-up rates differed by this amount. Watermarked was higher.</p>
+        </article>
+        <article>
+          <p class="stat">0.02%</p>
+          <p>Thumbs-down rates differed by this amount. Watermarked was lower.</p>
+        </article>
+        <article>
+          <p class="stat">n.s.</p>
+          <p>Both differences were statistically insignificant, inside 95% confidence intervals.</p>
+        </article>
+      </div>
+      <p>Also a side-by-side human test: Gemma 7B-IT answers to 3,000 ELI5 questions. Five aspects: grammaticality/coherence, relevance, correctness, helpfulness, overall. No significant rater preference.</p>
+      <div class="modes">
+        <article>
+          <p class="meta-label">Production config</p>
+          <h3>Non-distortionary</h3>
+          <p>Two competitors per match, plus repeated context masking. This is the production config.</p>
+        </article>
+        <article>
+          <p class="meta-label">Stronger mark</p>
+          <h3>Distortionary</h3>
+          <p>More competitors per match. Trades some quality for a stronger mark.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="sheet block" id="speed" aria-labelledby="speed-title">
+      <p class="plate">Plate 06 / Speed</p>
+      <h2 id="speed-title">Speed, with speculative sampling</h2>
+      <p class="lede">Production systems use speculative sampling. A small draft model proposes tokens. The large model accepts or rejects them.</p>
+    </section>
+
+    <figure class="bleed">
+      <img src="speculative.jpg" width="1600" height="1000" alt="The sentence The cat sat on the mat under a tracing overlay, with cyan ticks under most words and one graphite cross.">
+      <figcaption class="sheet cap">Fig. 4. Speculative sampling in the production path. A draft proposes. The large model accepts or rejects. The watermark can ride that loop.</figcaption>
+    </figure>
+
+    <section class="sheet block">
+      <div class="modes">
+        <article>
+          <p class="meta-label">Combination A</p>
+          <h3>High-detectability</h3>
+          <p>Watermarked speculative sampling that keeps the mark strong.</p>
+        </article>
+        <article>
+          <p class="meta-label">Combination B</p>
+          <h3>Fast</h3>
+          <p>Keeps draft speed if the watermark is single-token non-distortionary. Use this when latency matters.</p>
+        </article>
+      </div>
+      <p>SynthID-Text has been productionized in Gemini and Gemini Advanced.</p>
+    </section>
+
+    <section class="sheet block detect" id="detection" aria-labelledby="detect-title">
+      <p class="plate">Plate 07 / Detection</p>
+      <h2 id="detect-title">Detection does not run the LLM</h2>
+      <p class="lede">Scoring does not run the LLM. It measures the text against the same secret key used at sampling time.</p>
+      <p>The main chart metric is true-positive rate at 1% false-positive rate.</p>
+      <ul class="ticks">
+        <li>Non-distortionary SynthID-Text beats Gumbel sampling.</li>
+        <li>Distortionary SynthID-Text beats Soft Red List at the same perplexity cost.</li>
+        <li>A selective predictor can abstain when unsure, to hold TPR 95% / FPR 1%.</li>
+      </ul>
+    </section>
+
+    <section class="sheet block limits" id="limits" aria-labelledby="limits-title">
+      <p class="plate">Plate 08 / Limits</p>
+      <h2 id="limits-title">Limits</h2>
+      <ul class="ticks">
+        <li>Needs the generating service to apply the mark.</li>
+        <li>Open-source models and other labs are not covered.</li>
+        <li>Vulnerable to stealing, spoofing, scrubbing, and paraphrasing. Edits weaken it.</li>
+        <li>Complementary to post-hoc detectors, not a replacement.</li>
+        <li>Consistent across languages in their tests, unlike many classifiers.</li>
+      </ul>
+    </section>
+
+    <section class="sheet block cite" id="cite" aria-labelledby="cite-title">
+      <p class="plate">Plate 09 / Cite</p>
+      <h2 id="cite-title">Cite the paper</h2>
+      <blockquote>
+        <p>Dathathri, S. et al. Scalable watermarking for identifying large language model outputs. <cite>Nature</cite> <strong>634</strong> (2024).</p>
+      </blockquote>
+      <p><a href="https://doi.org/10.1038/s41586-024-08025-4">https://doi.org/10.1038/s41586-024-08025-4</a></p>
+      <p>Open access, CC BY 4.0.</p>
+      <p>Code to generate and detect text with SynthID-Text, and the human-evaluation data, are available in the paper's companion repository: <a href="https://github.com/google-deepmind/synthid-text">github.com/google-deepmind/synthid-text</a>.</p>
+    </section>
+  </main>
+
+  <footer class="sheet foot">
+    <span class="reg" aria-hidden="true"></span>
+    <p>Explainer built from the open-access article, not an official DeepMind site.</p>
+    <p>Nature Vol 634, 24 October 2024. doi 10.1038/s41586-024-08025-4.</p>
+  </footer>
+
+  <script src="scroll.js"></script>
+</body>
+</html>
